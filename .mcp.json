@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "excel-vba-mcp": {
+      "command": "./bin/win-x64/ExcelVbaMcp.exe",
+      "args": []
+    }
+  }
+}

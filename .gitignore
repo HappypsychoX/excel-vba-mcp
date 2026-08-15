@@ -3,12 +3,10 @@
 [Oo]bj/
 [Aa]rtifacts/
 
-# The plugin is a distributable bundle and intentionally carries this published server.
-!plugin/
-!plugin/excel-vba-mcp/
-!plugin/excel-vba-mcp/bin/
-!plugin/excel-vba-mcp/bin/win-x64/
-!plugin/excel-vba-mcp/bin/win-x64/ExcelVbaMcp.exe
+# The root plugin is a distributable bundle and intentionally carries this published server.
+!/bin/
+!/bin/win-x64/
+!/bin/win-x64/ExcelVbaMcp.exe
 
 # Visual Studio and user-specific files
 .vs/

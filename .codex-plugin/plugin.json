@@ -1,0 +1,30 @@
+{
+  "name": "excel-vba-mcp",
+  "version": "0.1.2",
+  "description": "A bundled read-only MCP server for the Excel VBA MCP project.",
+  "author": {
+    "name": "HappypsychoX",
+    "url": "https://github.com/HappypsychoX"
+  },
+  "homepage": "https://github.com/HappypsychoX/excel-vba-mcp",
+  "repository": "https://github.com/HappypsychoX/excel-vba-mcp",
+  "license": "MIT",
+  "keywords": [
+    "excel",
+    "vba",
+    "mcp"
+  ],
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Excel VBA MCP",
+    "shortDescription": "Connect Codex to the Excel VBA MCP server.",
+    "longDescription": "Phase 1 bundles a read-only MCP server with ping and get_version tools. Excel, COM, VBIDE, workbook, and VBA capabilities remain deferred.",
+    "developerName": "HappypsychoX",
+    "category": "Productivity",
+    "capabilities": [
+      "Read-only MCP tools"
+    ],
+    "websiteURL": "https://github.com/HappypsychoX/excel-vba-mcp",
+    "defaultPrompt": "Check whether the Excel VBA MCP server is available and report its version."
+  }
+}

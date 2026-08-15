@@ -47,11 +47,12 @@ jobs:
       - name: Package release ZIP
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Path artifacts/plugin/excel-vba-mcp/bin/win-x64 -Force | Out-Null
-          Copy-Item plugin/excel-vba-mcp/.codex-plugin artifacts/plugin/excel-vba-mcp -Recurse
-          Copy-Item plugin/excel-vba-mcp/.mcp.json artifacts/plugin/excel-vba-mcp/.mcp.json
-          Copy-Item artifacts/publish/ExcelVbaMcp.exe artifacts/plugin/excel-vba-mcp/bin/win-x64/ExcelVbaMcp.exe
-          Compress-Archive -Path artifacts/plugin/excel-vba-mcp -DestinationPath artifacts/excel-vba-mcp-plugin-win-x64.zip
+          New-Item -ItemType Directory -Path artifacts/excel-vba-mcp/bin/win-x64 -Force | Out-Null
+          Copy-Item .claude-plugin artifacts/excel-vba-mcp -Recurse
+          Copy-Item .codex-plugin artifacts/excel-vba-mcp -Recurse
+          Copy-Item .mcp.json artifacts/excel-vba-mcp/.mcp.json
+          Copy-Item artifacts/publish/ExcelVbaMcp.exe artifacts/excel-vba-mcp/bin/win-x64/ExcelVbaMcp.exe
+          Compress-Archive -Path artifacts/excel-vba-mcp -DestinationPath artifacts/excel-vba-mcp-plugin-win-x64.zip
 
       - name: Upload packaged plugin
         uses: actions/upload-artifact@v7

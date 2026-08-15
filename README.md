@@ -18,10 +18,11 @@ There are no prompts, resources, Excel APIs, workbook operations, or write-capab
 ```text
 .
 |-- .github/workflows/ci.yml                 Build, package, and tagged-release automation
-|-- plugin/excel-vba-mcp/
-|   |-- .codex-plugin/plugin.json            Plugin metadata and MCP configuration reference
-|   |-- .mcp.json                            Bundled MCP server definition
-|   `-- bin/win-x64/ExcelVbaMcp.exe           Self-contained bundled server
+|-- .claude-plugin/plugin.json               Claude Code marketplace manifest
+|-- .codex-plugin/plugin.json                Codex marketplace manifest
+|-- .mcp.json                                Shared bundled MCP configuration
+|-- bin/win-x64/ExcelVbaMcp.exe              Self-contained bundled server
+|-- CLAUDE.md                                Repository layout guidance
 |-- src/ExcelVbaMcp.Server/
 |   |-- Program.cs                           Minimal process entry point
 |   |-- ServerHost.cs                        Host, logging, stdio transport, and tool registration
@@ -33,7 +34,7 @@ There are no prompts, resources, Excel APIs, workbook operations, or write-capab
 `-- Excel VBA MCP Server — Development Checklist.md
 ```
 
-The plugin is the distribution unit: when Codex installs it, the plugin manifest, `.mcp.json`, and `ExcelVbaMcp.exe` are saved together. The MCP definition starts the executable bundled in that plugin directory; it does not download a GitHub release on first use. Codex documents `.mcp.json` as the mechanism for distributing an MCP server with a plugin, with the manifest referring to it from the plugin root. [Codex plugin documentation](https://developers.openai.com/plugins/build/plugins)
+The repository root is the plugin root for both hosts. Claude Code discovers `.claude-plugin/plugin.json`; Codex discovers `.codex-plugin/plugin.json`; both reference the same root `.mcp.json`. The configuration starts the executable bundled in `bin/win-x64/` and neither host downloads a GitHub release on first use. [Claude Code plugin documentation](https://code.claude.com/docs/en/plugins-reference) [Codex plugin documentation](https://developers.openai.com/plugins/build/plugins)
 
 Logging is sent to stderr because stdout is reserved for MCP protocol messages.
 
@@ -60,7 +61,7 @@ dotnet publish src/ExcelVbaMcp.Server/ExcelVbaMcp.Server.csproj `
   -p:IncludeNativeLibrariesForSelfExtract=true `
   -p:DebugType=None `
   -p:DebugSymbols=false `
-  --output plugin/excel-vba-mcp/bin/win-x64
+  --output bin/win-x64
 ```
 
 Run the protocol smoke test against the bundled executable:
@@ -69,7 +70,7 @@ Run the protocol smoke test against the bundled executable:
 dotnet run --project tests/ExcelVbaMcp.SmokeTest/ExcelVbaMcp.SmokeTest.csproj `
   --configuration Release `
   --no-build `
-  -- plugin/excel-vba-mcp/bin/win-x64/ExcelVbaMcp.exe
+  -- bin/win-x64/ExcelVbaMcp.exe
 ```
 
 ## Install and activation model
@@ -83,8 +84,8 @@ The precise host-side activation test is still an acceptance check: install the 
 ## Release process
 
 1. Update `VersionPrefix`, `AssemblyVersion`, and `FileVersion` in `Directory.Build.props`.
-2. Keep the version in `plugin/excel-vba-mcp/.codex-plugin/plugin.json` in sync.
-3. Publish the server into `plugin/excel-vba-mcp/bin/win-x64/` using the command above.
+2. Keep both root plugin manifests in sync with `Directory.Build.props`.
+3. Publish the server into `bin/win-x64/` using the command above.
 4. Validate the plugin manifest and run the smoke test against the bundled executable.
 5. Commit the source and bundled executable, create a matching annotated tag such as `v0.1.0`, then push.
 
