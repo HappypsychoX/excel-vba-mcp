@@ -1,19 +1,39 @@
 # Excel VBA MCP Server — Development Checklist
 
+## Current Status
+
+- **Updated:** August 15, 2026
+- **Branch:** `main`
+- **Phase 1 scaffold:** complete and pushed in `3d40a51`; CI runtime update in `3b6a3d7`
+
+**Overall Phase 1:** in progress — the server, plugin scaffold, CI packaging, and local MCP validation are complete; download-on-first-use remains deferred.
+
+Completed foundation work:
+
+- Minimal .NET 10 stdio MCP server using the official `ModelContextProtocol` C# SDK.
+- Exactly two read-only tools: `ping` and `get_version`.
+- Self-contained, single-file `win-x64` publish validated locally.
+- Framework-free MCP smoke test lists and calls both tools successfully.
+- Validated Codex plugin manifest under `plugin/excel-vba-mcp/`.
+- GitHub Actions restores, builds, publishes, smoke-tests, packages, and uploads the Windows ZIP.
+- Tagged `v*` release automation is implemented but has not yet been exercised by publishing a tag.
+
+No Excel, COM, VBIDE, workbook, or VBA automation has been implemented.
+
 ## Phase 1 — Prove Download-on-First-Use
 
-- [ ] Create a minimal/empty MCP server project in C#/.NET.
-- [ ] Build it as a self-contained Windows executable (`VbaMcp.exe`).
-- [ ] Have the server expose only a simple test tool such as `ping` or `get_version`.
-- [ ] Create a GitHub repository for the project.
-- [ ] Publish `VbaMcp.exe` as a GitHub Release asset.
-- [ ] Define the permanent local location, preferably `%LOCALAPPDATA%\VbaMcp\`.
-- [ ] Give the test agent instructions to check for `%LOCALAPPDATA%\VbaMcp\VbaMcp.exe`.
+- [x] Create a minimal MCP server project in C#/.NET 10 using stdio transport.
+- [x] Build it as a self-contained, single-file Windows executable (`ExcelVbaMcp.exe`).
+- [x] Have the server expose only the read-only `ping` and `get_version` tools.
+- [x] Create and push the GitHub repository for the project.
+- [ ] Publish `ExcelVbaMcp.exe` as a GitHub Release asset. The `v*` tag workflow is ready; no release tag has been published yet.
+- [ ] Define the permanent local installation location; `%LOCALAPPDATA%\ExcelVbaMcp\` is a candidate, not yet a decision.
+- [ ] Give the test agent instructions to check the chosen location for `ExcelVbaMcp.exe`.
 - [ ] If the executable does not exist, have the agent locate the latest GitHub Release and download it.
 - [ ] Have the agent save the executable to the permanent local location.
 - [ ] Have the agent launch the downloaded MCP server.
-- [ ] Verify the agent can connect and call the `ping`/`get_version` tool.
-- [ ] End the MCP session and verify `VbaMcp.exe` shuts down cleanly.
+- [x] Verify an MCP client can connect to the locally published executable, list exactly both tools, and call `ping`/`get_version`.
+- [x] End the local MCP smoke-test session and verify the server shuts down cleanly.
 - [ ] Start a second session and verify the agent finds and reuses the existing executable without downloading it again.
 - [ ] Test from a clean PC or user profile to verify the entire first-use process from scratch.
 - [ ] Document the exact bootstrap instructions that reliably worked.
@@ -21,6 +41,8 @@
 ### Phase 1 Success Criteria
 
 A machine with no existing VBA MCP installation can be given the repository/release location, automatically download the server, save it permanently, launch it, use its test tool, and reuse the same installation later.
+
+**Status:** Not yet met. Executable discovery, installation location, integrity verification, first-use download, reuse, update, and rollback behavior are intentionally deferred. Accordingly, the plugin does not contain a fragile `.mcp.json` executable path.
 
 ---
 
@@ -91,9 +113,9 @@ A machine with no existing VBA MCP installation can be given the repository/rele
 
 ## Phase 7 — Versioning and Updates
 
-- [ ] Add a server version number.
-- [ ] Add `get_version`.
-- [ ] Define GitHub Release naming/version conventions.
+- [x] Add a server version number, centrally defined in `Directory.Build.props`.
+- [x] Add the read-only `get_version` tool.
+- [x] Define `v*` GitHub Release naming and packaging conventions in the README and workflow.
 - [ ] Allow an agent to compare the installed version with the latest release.
 - [ ] Download updates only when appropriate.
 - [ ] Verify release downloads with SHA-256 hashes or code signing.
@@ -120,4 +142,4 @@ A machine with no existing VBA MCP installation can be given the repository/rele
 
 ## Core Rule
 
-- [ ] **All workbook and VBA modifications go through Excel/COM/VBIDE. Never directly rewrite the `.xlsm`, `.xlsb`, or `vbaProject.bin` file structure.**
+- [x] **Document the invariant that all workbook and VBA modifications go through Excel/COM/VBIDE. Never directly rewrite the `.xlsm`, `.xlsb`, or `vbaProject.bin` file structure.** Enforcement and integration testing begin when write capabilities are introduced.
