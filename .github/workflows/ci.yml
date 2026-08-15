@@ -13,10 +13,10 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up .NET 10
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
 
@@ -49,7 +49,7 @@ jobs:
         run: Compress-Archive -Path artifacts/publish/ExcelVbaMcp.exe -DestinationPath artifacts/excel-vba-mcp-win-x64.zip
 
       - name: Upload packaged executable
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: excel-vba-mcp-win-x64
           path: artifacts/excel-vba-mcp-win-x64.zip
@@ -64,7 +64,7 @@ jobs:
 
     steps:
       - name: Download packaged executable
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: excel-vba-mcp-win-x64
           path: artifacts
