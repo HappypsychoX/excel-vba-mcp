@@ -1,6 +1,6 @@
 # Excel VBA MCP
 
-Excel VBA MCP is a local Model Context Protocol server intended to let MCP clients work safely with Microsoft Excel and VBA. Phase 1 establishes only the distributable server and plugin foundations. It deliberately performs no Excel automation.
+Excel VBA MCP is a local Model Context Protocol server intended to let MCP clients work safely with Microsoft Excel and VBA. Phase 1 establishes the distributable server and Codex plugin foundations only; it performs no Excel automation.
 
 ## Phase 1 scope
 
@@ -19,7 +19,9 @@ There are no prompts, resources, Excel APIs, workbook operations, or write-capab
 .
 |-- .github/workflows/ci.yml                 Build, package, and tagged-release automation
 |-- plugin/excel-vba-mcp/
-|   `-- .codex-plugin/plugin.json            Valid Codex plugin metadata
+|   |-- .codex-plugin/plugin.json            Plugin metadata and MCP configuration reference
+|   |-- .mcp.json                            Bundled MCP server definition
+|   `-- bin/win-x64/ExcelVbaMcp.exe           Self-contained bundled server
 |-- src/ExcelVbaMcp.Server/
 |   |-- Program.cs                           Minimal process entry point
 |   |-- ServerHost.cs                        Host, logging, stdio transport, and tool registration
@@ -30,6 +32,8 @@ There are no prompts, resources, Excel APIs, workbook operations, or write-capab
 |-- Directory.Packages.props                 Central NuGet dependency versions
 `-- Excel VBA MCP Server — Development Checklist.md
 ```
+
+The plugin is the distribution unit: when Codex installs it, the plugin manifest, `.mcp.json`, and `ExcelVbaMcp.exe` are saved together. The MCP definition starts the executable bundled in that plugin directory; it does not download a GitHub release on first use. Codex documents `.mcp.json` as the mechanism for distributing an MCP server with a plugin, with the manifest referring to it from the plugin root. [Codex plugin documentation](https://developers.openai.com/plugins/build/plugins)
 
 Logging is sent to stderr because stdout is reserved for MCP protocol messages.
 
@@ -45,7 +49,7 @@ dotnet run --project src/ExcelVbaMcp.Server/ExcelVbaMcp.Server.csproj
 
 The final command waits for an MCP client on stdin/stdout; it is not an interactive shell.
 
-To produce the same Windows artifact as CI:
+Publish the executable into the plugin bundle:
 
 ```powershell
 dotnet publish src/ExcelVbaMcp.Server/ExcelVbaMcp.Server.csproj `
@@ -54,31 +58,37 @@ dotnet publish src/ExcelVbaMcp.Server/ExcelVbaMcp.Server.csproj `
   --self-contained true `
   -p:PublishSingleFile=true `
   -p:IncludeNativeLibrariesForSelfExtract=true `
-  --output artifacts/publish
+  -p:DebugType=None `
+  -p:DebugSymbols=false `
+  --output plugin/excel-vba-mcp/bin/win-x64
 ```
 
-Run the end-to-end MCP smoke test against that executable:
+Run the protocol smoke test against the bundled executable:
 
 ```powershell
 dotnet run --project tests/ExcelVbaMcp.SmokeTest/ExcelVbaMcp.SmokeTest.csproj `
-  -- artifacts/publish/ExcelVbaMcp.exe
+  --configuration Release `
+  --no-build `
+  -- plugin/excel-vba-mcp/bin/win-x64/ExcelVbaMcp.exe
 ```
 
-## Codex plugin status
+## Install and activation model
 
-`plugin/excel-vba-mcp/.codex-plugin/plugin.json` is a valid metadata-only plugin scaffold. It intentionally has no `.mcp.json`: a repository-relative path cannot reliably locate an executable downloaded to an arbitrary machine, and no bundled-executable resolver or verified installer exists yet.
+Install the packaged plugin in Codex and enable it. The plugin brings the server executable with it, so there is no repository clone, bootstrap script, GitHub API call, or release download during first use.
 
-Activation/bootstrap work must establish a durable install location, download and integrity-verification policy, update/rollback behavior, and a reliable command path before an MCP server entry is added. Until then, clients can launch a locally built or published executable through an explicit user configuration.
+`%LOCALAPPDATA%\ExcelVbaMcp\ExcelVbaMcp.exe` is not used by this distribution model. The plugin cache is the sole installation location; no standalone installer or direct-release download is planned.
+
+The precise host-side activation test is still an acceptance check: install the plugin into a clean Codex profile and confirm that the host resolves the root-relative command in `.mcp.json`, lists exactly `ping` and `get_version`, calls both, and shuts the server down when the MCP session ends.
 
 ## Release process
 
 1. Update `VersionPrefix`, `AssemblyVersion`, and `FileVersion` in `Directory.Build.props`.
 2. Keep the version in `plugin/excel-vba-mcp/.codex-plugin/plugin.json` in sync.
-3. Restore, build, publish, validate the plugin, and run the smoke test.
-4. Commit the release and create a matching annotated tag such as `v0.1.0`.
-5. Push the commit and tag.
+3. Publish the server into `plugin/excel-vba-mcp/bin/win-x64/` using the command above.
+4. Validate the plugin manifest and run the smoke test against the bundled executable.
+5. Commit the source and bundled executable, create a matching annotated tag such as `v0.1.0`, then push.
 
-Every push and pull request restores and builds the solution, publishes a self-contained single-file `win-x64` executable, packages it as `excel-vba-mcp-win-x64.zip`, and uploads the ZIP as a workflow artifact. A `v*` tag also creates or updates the corresponding GitHub release and attaches the ZIP for direct download.
+Every push and pull request restores, builds, publishes, and smoke-tests the server. CI produces one installable `excel-vba-mcp-plugin-win-x64.zip` containing the plugin manifest, MCP definition, and executable. A `v*` tag creates or updates the GitHub release and attaches that ZIP.
 
 ## Phase 1 checklist
 
@@ -86,15 +96,14 @@ Every push and pull request restores and builds the solution, publishes a self-c
 - [x] Use the official `ModelContextProtocol` C# SDK.
 - [x] Expose only read-only `ping` and `get_version` tools.
 - [x] Centralize assembly/package version metadata.
-- [x] Add a valid Codex plugin scaffold without a fragile executable path.
+- [x] Bundle the executable and `.mcp.json` with a valid Codex plugin manifest.
 - [x] Restore and build in GitHub Actions on pushes and pull requests.
 - [x] Publish and package a self-contained, single-file `win-x64` executable.
 - [x] Upload CI artifacts and attach ZIPs to `v*` GitHub releases.
 - [x] Provide a protocol-level smoke test for tool discovery and invocation.
-- [ ] Design and validate download-on-first-use installation/bootstrap.
-- [ ] Test install, reuse, update, and rollback from a clean Windows profile.
+- [ ] Validate plugin installation and activation from a clean Codex profile.
 
-The original, longer-term development checklist remains in [`Excel VBA MCP Server — Development Checklist.md`](./Excel%20VBA%20MCP%20Server%20%E2%80%94%20Development%20Checklist.md).
+The original, longer-term development checklist remains in [Excel VBA MCP Server — Development Checklist.md](./Excel%20VBA%20MCP%20Server%20%E2%80%94%20Development%20Checklist.md).
 
 ## Explicitly deferred
 
@@ -104,7 +113,6 @@ The following are out of Phase 1 and are not implemented:
 - VBIDE access and trust-setting detection
 - Workbook discovery, attachment, reading, saving, or other operations
 - VBA discovery, reading, editing, validation, or execution
-- Installer, download-on-first-use, executable discovery, integrity verification, updates, and rollback
-- Plugin `.mcp.json` activation until executable resolution is reliable
+- Plugin upgrade, integrity verification, and rollback behavior
 
 See the development checklist for the planned sequence. All future workbook and VBA changes must go through Excel/COM/VBIDE rather than rewriting Office package internals.

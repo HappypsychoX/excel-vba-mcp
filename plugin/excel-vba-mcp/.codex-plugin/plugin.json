@@ -1,7 +1,7 @@
 {
   "name": "excel-vba-mcp",
-  "version": "0.1.0",
-  "description": "A future Codex integration for safe Excel and VBA assistance.",
+  "version": "0.1.1",
+  "description": "A bundled read-only MCP server for the Excel VBA MCP project.",
   "author": {
     "name": "HappypsychoX",
     "url": "https://github.com/HappypsychoX"
@@ -14,10 +14,11 @@
     "vba",
     "mcp"
   ],
+  "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Excel VBA MCP",
     "shortDescription": "Connect Codex to the Excel VBA MCP server.",
-    "longDescription": "Phase 1 provides a validated plugin shell while safe server activation and Excel/VBIDE capabilities remain deferred.",
+    "longDescription": "Phase 1 bundles a read-only MCP server with ping and get_version tools. Excel, COM, VBIDE, workbook, and VBA capabilities remain deferred.",
     "developerName": "HappypsychoX",
     "category": "Productivity",
     "capabilities": [

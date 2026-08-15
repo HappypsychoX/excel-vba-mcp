@@ -46,13 +46,18 @@ jobs:
 
       - name: Package release ZIP
         shell: pwsh
-        run: Compress-Archive -Path artifacts/publish/ExcelVbaMcp.exe -DestinationPath artifacts/excel-vba-mcp-win-x64.zip
+        run: |
+          New-Item -ItemType Directory -Path artifacts/plugin/excel-vba-mcp/bin/win-x64 -Force | Out-Null
+          Copy-Item plugin/excel-vba-mcp/.codex-plugin artifacts/plugin/excel-vba-mcp -Recurse
+          Copy-Item plugin/excel-vba-mcp/.mcp.json artifacts/plugin/excel-vba-mcp/.mcp.json
+          Copy-Item artifacts/publish/ExcelVbaMcp.exe artifacts/plugin/excel-vba-mcp/bin/win-x64/ExcelVbaMcp.exe
+          Compress-Archive -Path artifacts/plugin/excel-vba-mcp -DestinationPath artifacts/excel-vba-mcp-plugin-win-x64.zip
 
-      - name: Upload packaged executable
+      - name: Upload packaged plugin
         uses: actions/upload-artifact@v7
         with:
-          name: excel-vba-mcp-win-x64
-          path: artifacts/excel-vba-mcp-win-x64.zip
+          name: excel-vba-mcp-plugin-win-x64
+          path: artifacts/excel-vba-mcp-plugin-win-x64.zip
           if-no-files-found: error
 
   release:
@@ -63,10 +68,10 @@ jobs:
       contents: write
 
     steps:
-      - name: Download packaged executable
+      - name: Download packaged plugin
         uses: actions/download-artifact@v8
         with:
-          name: excel-vba-mcp-win-x64
+          name: excel-vba-mcp-plugin-win-x64
           path: artifacts
 
       - name: Create or update tagged GitHub release
@@ -80,4 +85,4 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             gh release create $tag --verify-tag --generate-notes --title $tag
           }
-          gh release upload $tag artifacts/excel-vba-mcp-win-x64.zip --clobber
+          gh release upload $tag artifacts/excel-vba-mcp-plugin-win-x64.zip --clobber
