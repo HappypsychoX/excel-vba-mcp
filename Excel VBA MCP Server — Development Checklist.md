@@ -4,7 +4,7 @@
 
 - **Updated:** August 15, 2026
 - **Branch:** `main`
-- **Phase 1 server version:** `0.1.2`; tagged plugin release pending
+- **Phase 1 server version:** `0.1.3`; tagged plugin release pending
 
 **Overall Phase 1:** in progress — the read-only server, CI packaging, first tagged release, and protocol smoke test are complete. Distribution now follows the bundled-plugin model: the plugin contains its `.mcp.json` and self-contained `ExcelVbaMcp.exe`; no first-use GitHub download is part of plugin activation.
 
@@ -13,7 +13,7 @@ Completed foundation work:
 - Minimal .NET 10 stdio MCP server using the official `ModelContextProtocol` C# SDK.
 - Exactly two read-only tools: `ping` and `get_version`.
 - Self-contained, single-file `win-x64` publish and framework-free MCP smoke test.
-- Root-level Claude Code and Codex plugin manifests with shared bundled MCP configuration.
+- Root-level Claude Code and Codex plugin manifests with host-specific bundled MCP configuration.
 - GitHub Actions restores, builds, publishes, smoke-tests, packages, and uploads the plugin ZIP.
 - The next tagged release packages the plugin ZIP only.
 
@@ -27,7 +27,7 @@ No Excel, COM, VBIDE, workbook, or VBA automation has been implemented.
 - [x] Create and push the GitHub repository for the project.
 - [x] Publish the Phase 1 server in the `v0.1.0` GitHub Release.
 - [x] Include `ExcelVbaMcp.exe` inside root `bin/win-x64/`.
-- [x] Add root `.mcp.json`, referenced from both plugin manifests.
+- [x] Add root `.mcp.json` for Codex and an inline MCP configuration for Claude Code.
 - [x] Package a plugin ZIP containing its manifest, MCP configuration, and server executable.
 - [x] Verify an MCP client can list exactly both tools and call `ping`/`get_version` against the bundled executable.
 - [ ] Install the root plugin in clean Claude Code and Codex profiles; verify host activation, tool listing, calls, and clean shutdown.

@@ -20,7 +20,7 @@ There are no prompts, resources, Excel APIs, workbook operations, or write-capab
 |-- .github/workflows/ci.yml                 Build, package, and tagged-release automation
 |-- .claude-plugin/plugin.json               Claude Code marketplace manifest
 |-- .codex-plugin/plugin.json                Codex marketplace manifest
-|-- .mcp.json                                Shared bundled MCP configuration
+|-- .mcp.json                                Codex bundled MCP configuration
 |-- bin/win-x64/ExcelVbaMcp.exe              Self-contained bundled server
 |-- CLAUDE.md                                Repository layout guidance
 |-- src/ExcelVbaMcp.Server/
@@ -34,7 +34,7 @@ There are no prompts, resources, Excel APIs, workbook operations, or write-capab
 `-- Excel VBA MCP Server — Development Checklist.md
 ```
 
-The repository root is the plugin root for both hosts. Claude Code discovers `.claude-plugin/plugin.json`; Codex discovers `.codex-plugin/plugin.json`; both reference the same root `.mcp.json`. The configuration starts the executable bundled in `bin/win-x64/` and neither host downloads a GitHub release on first use. [Claude Code plugin documentation](https://code.claude.com/docs/en/plugins-reference) [Codex plugin documentation](https://developers.openai.com/plugins/build/plugins)
+The repository root is the plugin root for both hosts. Codex discovers `.codex-plugin/plugin.json`, which references the root `.mcp.json` using Codex's `mcp_servers` format. Claude Code discovers `.claude-plugin/plugin.json`, which carries its inline MCP configuration using `CLAUDE_PLUGIN_ROOT`. Both start the executable bundled in `bin/win-x64/`; neither downloads a GitHub release on first use. [Claude Code plugin documentation](https://code.claude.com/docs/en/plugins-reference) [Codex plugin documentation](https://developers.openai.com/plugins/build/plugins)
 
 Logging is sent to stderr because stdout is reserved for MCP protocol messages.
 

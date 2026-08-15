@@ -1,6 +1,6 @@
 {
   "name": "excel-vba-mcp",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A bundled read-only MCP server for the Excel VBA MCP project.",
   "author": {
     "name": "HappypsychoX",
