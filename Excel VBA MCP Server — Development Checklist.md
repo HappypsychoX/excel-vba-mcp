@@ -6,7 +6,7 @@
 - **Branch:** `main`
 - **Phase 1 scaffold:** complete and pushed in `3d40a51`; CI runtime update in `3b6a3d7`
 
-**Overall Phase 1:** in progress — the server, plugin scaffold, CI packaging, and local MCP validation are complete; download-on-first-use remains deferred.
+**Overall Phase 1:** in progress — the server, plugin scaffold, CI packaging, first tagged release, and downloaded-release MCP validation are complete; automated download-on-first-use remains deferred.
 
 Completed foundation work:
 
@@ -16,7 +16,8 @@ Completed foundation work:
 - Framework-free MCP smoke test lists and calls both tools successfully.
 - Validated Codex plugin manifest under `plugin/excel-vba-mcp/`.
 - GitHub Actions restores, builds, publishes, smoke-tests, packages, and uploads the Windows ZIP.
-- Tagged `v*` release automation is implemented but has not yet been exercised by publishing a tag.
+- Published GitHub release `v0.1.0` with `excel-vba-mcp-win-x64.zip` through the tagged-release workflow.
+- Downloaded the release ZIP into an isolated directory, verified its GitHub-recorded SHA-256 digest, and smoke-tested the extracted executable.
 
 No Excel, COM, VBIDE, workbook, or VBA automation has been implemented.
 
@@ -26,14 +27,14 @@ No Excel, COM, VBIDE, workbook, or VBA automation has been implemented.
 - [x] Build it as a self-contained, single-file Windows executable (`ExcelVbaMcp.exe`).
 - [x] Have the server expose only the read-only `ping` and `get_version` tools.
 - [x] Create and push the GitHub repository for the project.
-- [ ] Publish `ExcelVbaMcp.exe` as a GitHub Release asset. The `v*` tag workflow is ready; no release tag has been published yet.
+- [x] Publish `ExcelVbaMcp.exe` in `excel-vba-mcp-win-x64.zip` as the GitHub `v0.1.0` Release asset.
 - [ ] Define the permanent local installation location; `%LOCALAPPDATA%\ExcelVbaMcp\` is a candidate, not yet a decision.
 - [ ] Give the test agent instructions to check the chosen location for `ExcelVbaMcp.exe`.
-- [ ] If the executable does not exist, have the agent locate the latest GitHub Release and download it.
+- [ ] If the executable does not exist, have the bootstrap locate the latest GitHub Release and download it automatically. Manual agent download of `v0.1.0` is validated.
 - [ ] Have the agent save the executable to the permanent local location.
-- [ ] Have the agent launch the downloaded MCP server.
-- [x] Verify an MCP client can connect to the locally published executable, list exactly both tools, and call `ping`/`get_version`.
-- [x] End the local MCP smoke-test session and verify the server shuts down cleanly.
+- [x] Have the agent launch the executable extracted from the downloaded GitHub Release ZIP.
+- [x] Verify an MCP client can connect to the downloaded release executable, list exactly both tools, and call `ping`/`get_version`.
+- [x] End the downloaded-release MCP smoke-test session and verify the server shuts down cleanly.
 - [ ] Start a second session and verify the agent finds and reuses the existing executable without downloading it again.
 - [ ] Test from a clean PC or user profile to verify the entire first-use process from scratch.
 - [ ] Document the exact bootstrap instructions that reliably worked.
