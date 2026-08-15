@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ExcelVbaMcp.Server/ExcelVbaMcp.Server.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ExcelVbaMcp.SmokeTest/ExcelVbaMcp.SmokeTest.csproj" />
+  </Folder>
+</Solution>

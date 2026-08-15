@@ -1,0 +1,83 @@
+name: Build and release
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore ExcelVbaMcp.slnx
+
+      - name: Build
+        run: dotnet build ExcelVbaMcp.slnx --configuration Release --no-restore
+
+      - name: Publish win-x64 single-file executable
+        run: >-
+          dotnet publish src/ExcelVbaMcp.Server/ExcelVbaMcp.Server.csproj
+          --configuration Release
+          --runtime win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          --output artifacts/publish
+
+      - name: Smoke-test MCP tools
+        run: >-
+          dotnet run
+          --project tests/ExcelVbaMcp.SmokeTest/ExcelVbaMcp.SmokeTest.csproj
+          --configuration Release
+          --no-build
+          -- artifacts/publish/ExcelVbaMcp.exe
+
+      - name: Package release ZIP
+        shell: pwsh
+        run: Compress-Archive -Path artifacts/publish/ExcelVbaMcp.exe -DestinationPath artifacts/excel-vba-mcp-win-x64.zip
+
+      - name: Upload packaged executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: excel-vba-mcp-win-x64
+          path: artifacts/excel-vba-mcp-win-x64.zip
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download packaged executable
+        uses: actions/download-artifact@v4
+        with:
+          name: excel-vba-mcp-win-x64
+          path: artifacts
+
+      - name: Create or update tagged GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag --verify-tag --generate-notes --title $tag
+          }
+          gh release upload $tag artifacts/excel-vba-mcp-win-x64.zip --clobber

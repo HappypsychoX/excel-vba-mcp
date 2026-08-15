@@ -1,0 +1,35 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+[Aa]rtifacts/
+
+# Visual Studio and user-specific files
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# Test results and coverage
+[Tt]est[Rr]esult*/
+coverage*.xml
+coverage*.json
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+!**/packages/build/
+
+# Local tooling and logs
+.dotnet/
+.tmp/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
