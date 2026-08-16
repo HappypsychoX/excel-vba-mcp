@@ -26,6 +26,9 @@ jobs:
       - name: Build
         run: dotnet build ExcelVbaMcp.slnx --configuration Release --no-restore
 
+      - name: Run unit tests
+        run: dotnet test tests/ExcelVbaMcp.Tests/ExcelVbaMcp.Tests.csproj --configuration Release --no-build --no-restore
+
       - name: Publish win-x64 single-file executable
         run: >-
           dotnet publish src/ExcelVbaMcp.Server/ExcelVbaMcp.Server.csproj

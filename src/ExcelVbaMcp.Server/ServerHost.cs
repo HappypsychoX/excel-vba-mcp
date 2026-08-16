@@ -1,4 +1,5 @@
 using ExcelVbaMcp.Tools;
+using ExcelVbaMcp.Excel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -19,7 +20,12 @@ internal static class ServerHost
         builder.Services
             .AddMcpServer()
             .WithStdioServerTransport()
-            .WithTools<PhaseOneTools>();
+            .WithTools<PhaseOneTools>()
+            .WithTools<WorkbookTools>();
+
+        builder.Services.AddSingleton<ExcelComDispatcher>();
+        builder.Services.AddSingleton<IExcelInstanceLocator, ExcelInstanceLocator>();
+        builder.Services.AddSingleton<IExcelWorkbookReader, ExcelWorkbookReader>();
 
         await builder.Build().RunAsync();
     }
