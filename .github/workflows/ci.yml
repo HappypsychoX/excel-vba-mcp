@@ -26,6 +26,9 @@ jobs:
       - name: Build
         run: dotnet build ExcelVbaMcp.slnx --configuration Release --no-restore
 
+      - name: Test solution
+        run: dotnet test ExcelVbaMcp.slnx --configuration Release --no-build --no-restore
+
       - name: Publish win-x64 single-file executable
         run: >-
           dotnet publish src/ExcelVbaMcp.Server/ExcelVbaMcp.Server.csproj
@@ -34,25 +37,55 @@ jobs:
           --self-contained true
           -p:PublishSingleFile=true
           -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:DebugType=None
+          -p:DebugSymbols=false
           --output artifacts/publish
 
-      - name: Smoke-test MCP tools
+      - name: Assemble plugin package
+        shell: pwsh
+        run: |
+          $pluginRoot = 'artifacts/package/excel-vba-mcp'
+          New-Item -ItemType Directory -Path "$pluginRoot/bin/win-x64" -Force | Out-Null
+          Copy-Item .claude-plugin $pluginRoot -Recurse
+          Copy-Item .codex-plugin $pluginRoot -Recurse
+          Copy-Item .mcp.json "$pluginRoot/.mcp.json"
+          Copy-Item artifacts/publish/ExcelVbaMcp.exe "$pluginRoot/bin/win-x64/ExcelVbaMcp.exe"
+
+      - name: Smoke-test executable included in plugin package
         run: >-
           dotnet run
           --project tests/ExcelVbaMcp.SmokeTest/ExcelVbaMcp.SmokeTest.csproj
           --configuration Release
           --no-build
-          -- artifacts/publish/ExcelVbaMcp.exe
+          -- artifacts/package/excel-vba-mcp/bin/win-x64/ExcelVbaMcp.exe
 
-      - name: Package release ZIP
+      - name: Create and inspect plugin ZIP
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Path artifacts/excel-vba-mcp/bin/win-x64 -Force | Out-Null
-          Copy-Item .claude-plugin artifacts/excel-vba-mcp -Recurse
-          Copy-Item .codex-plugin artifacts/excel-vba-mcp -Recurse
-          Copy-Item .mcp.json artifacts/excel-vba-mcp/.mcp.json
-          Copy-Item artifacts/publish/ExcelVbaMcp.exe artifacts/excel-vba-mcp/bin/win-x64/ExcelVbaMcp.exe
-          Compress-Archive -Path artifacts/excel-vba-mcp -DestinationPath artifacts/excel-vba-mcp-plugin-win-x64.zip
+          $zip = 'artifacts/excel-vba-mcp-plugin-win-x64.zip'
+          $extractedRoot = 'artifacts/extracted/excel-vba-mcp'
+          Compress-Archive -Path artifacts/package/excel-vba-mcp -DestinationPath $zip
+          Expand-Archive -Path $zip -DestinationPath artifacts/extracted
+
+          $requiredPaths = @(
+            "$extractedRoot/.claude-plugin/plugin.json"
+            "$extractedRoot/.codex-plugin/plugin.json"
+            "$extractedRoot/.mcp.json"
+            "$extractedRoot/bin/win-x64/ExcelVbaMcp.exe"
+          )
+          foreach ($requiredPath in $requiredPaths) {
+            if (-not (Test-Path -LiteralPath $requiredPath -PathType Leaf)) {
+              throw "Plugin ZIP is missing required file: $requiredPath"
+            }
+          }
+
+      - name: Smoke-test executable extracted from plugin ZIP
+        run: >-
+          dotnet run
+          --project tests/ExcelVbaMcp.SmokeTest/ExcelVbaMcp.SmokeTest.csproj
+          --configuration Release
+          --no-build
+          -- artifacts/extracted/excel-vba-mcp/bin/win-x64/ExcelVbaMcp.exe
 
       - name: Upload packaged plugin
         uses: actions/upload-artifact@v7

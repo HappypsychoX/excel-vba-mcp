@@ -1,7 +1,7 @@
 {
   "name": "excel-vba-mcp",
-  "version": "0.1.3",
-  "description": "A bundled read-only MCP server for the Excel VBA MCP project.",
+  "version": "0.2.0",
+  "description": "A bundled read-only MCP server for discovering workbooks already open in Excel.",
   "author": {
     "name": "HappypsychoX",
     "url": "https://github.com/HappypsychoX"

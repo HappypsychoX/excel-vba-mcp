@@ -4,5 +4,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/ExcelVbaMcp.SmokeTest/ExcelVbaMcp.SmokeTest.csproj" />
+    <Project Path="tests/ExcelVbaMcp.Tests/ExcelVbaMcp.Tests.csproj" />
+    <Project Path="tests/ExcelVbaMcp.RealExcelIntegration/ExcelVbaMcp.RealExcelIntegration.csproj" />
   </Folder>
 </Solution>
