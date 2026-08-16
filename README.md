@@ -61,8 +61,8 @@ The server attempts to enumerate every Excel application discoverable through th
 |-- .github/workflows/ci.yml                 Build, package, and tagged-release automation
 |-- .claude-plugin/plugin.json               Claude Code marketplace manifest
 |-- .codex-plugin/plugin.json                Codex marketplace manifest
-|-- .mcp.json                                Codex bundled MCP configuration
-|-- bin/win-x64/ExcelVbaMcp.exe              Self-contained bundled server
+|-- .mcp.json                                Codex bundled MCP configuration (`mcpServers`)
+|-- bin/win-x64/ExcelVbaMcp.exe              Generated locally; ignored by Git
 |-- src/ExcelVbaMcp.Server/                  MCP host, COM dispatcher, locator, reader, and tools
 |-- tests/                                   Protocol smoke test and unit tests
 |-- docs/phase-2-real-excel-verification.md  Windows/Excel manual verification procedure
@@ -70,7 +70,9 @@ The server attempts to enumerate every Excel application discoverable through th
 `-- Excel VBA MCP Server — Development Checklist.md
 ```
 
-The repository root is the plugin root for both hosts. Codex discovers `.codex-plugin/plugin.json`, which references the root `.mcp.json` using Codex’s `mcp_servers` format. Claude Code discovers `.claude-plugin/plugin.json`, which carries inline MCP configuration using `CLAUDE_PLUGIN_ROOT`. Both start the executable bundled in `bin/win-x64/`; neither downloads a GitHub release on first use. [Claude Code plugin documentation](https://code.claude.com/docs/en/plugins-reference) and [Codex plugin documentation](https://developers.openai.com/plugins/build/plugins)
+The repository contains the plugin manifests and server source, but a clean source checkout does not contain `bin/win-x64/ExcelVbaMcp.exe`. That generated file is ignored by Git. CI publishes the server and assembles the installable plugin ZIP, whose root folder contains both manifests, `.mcp.json`, and `bin/win-x64/ExcelVbaMcp.exe`.
+
+In the completed package, Codex discovers `.codex-plugin/plugin.json`, which references the root `.mcp.json` companion file. That JSON file uses the plugin-schema `mcpServers` key; the similarly named `mcp_servers` key appears only in Codex TOML settings. Claude Code discovers `.claude-plugin/plugin.json`, which carries inline MCP configuration using `CLAUDE_PLUGIN_ROOT`. Both start the executable already bundled in the installed plugin; neither downloads a GitHub release on activation. [Claude Code plugin documentation](https://code.claude.com/docs/en/plugins-reference) and [Codex plugin documentation](https://developers.openai.com/plugins/build/plugins)
 
 Logging is sent to stderr because stdout is reserved for MCP protocol messages.
 
@@ -87,7 +89,7 @@ dotnet test tests/ExcelVbaMcp.Tests/ExcelVbaMcp.Tests.csproj `
 
 The unit tests use test doubles for Excel/COM and do not require Office. They cover the no-running-instance response, empty and populated results, unsaved workbook paths, duplicate names, COM-error translation, dispatcher cancellation/shutdown, and cleanup after a failed enumeration.
 
-Publish the executable into the plugin bundle:
+Publish the executable to generated output:
 
 ```powershell
 dotnet publish src/ExcelVbaMcp.Server/ExcelVbaMcp.Server.csproj `
@@ -98,7 +100,7 @@ dotnet publish src/ExcelVbaMcp.Server/ExcelVbaMcp.Server.csproj `
   -p:IncludeNativeLibrariesForSelfExtract=true `
   -p:DebugType=None `
   -p:DebugSymbols=false `
-  --output bin/win-x64
+  --output artifacts/publish
 ```
 
 Run the protocol smoke test against the published executable:
@@ -107,7 +109,7 @@ Run the protocol smoke test against the published executable:
 dotnet run --project tests/ExcelVbaMcp.SmokeTest/ExcelVbaMcp.SmokeTest.csproj `
   --configuration Release `
   --no-build `
-  -- bin/win-x64/ExcelVbaMcp.exe
+  -- artifacts/publish/ExcelVbaMcp.exe
 ```
 
 The smoke test expects exactly `get_version`, `list_workbooks`, and `ping`. It is valid to run it on a machine without Excel: in that case it verifies the well-formed `excelRunning: false` response and confirms that the server does not launch Excel.
@@ -119,7 +121,7 @@ After publishing, the Windows-only harness can be run as follows (use two saved 
 ```powershell
 dotnet run --project tests/ExcelVbaMcp.RealExcelIntegration `
   --configuration Release -- `
-  --server .\bin\win-x64\ExcelVbaMcp.exe `
+  --server .\artifacts\publish\ExcelVbaMcp.exe `
   --workbook SavedOne.xlsx `
   --workbook SavedTwo.xlsx `
   --unsaved Book3
@@ -129,7 +131,7 @@ The harness records `EXCEL.EXE` process IDs, asks the tester to open the workboo
 
 ## Install and activation model
 
-Install the packaged plugin in Codex and enable it. The plugin brings the server executable with it, so there is no repository clone, bootstrap script, GitHub API call, or release download during first use.
+Installation obtains the complete packaged plugin once, including `bin/win-x64/ExcelVbaMcp.exe`, and stores it in the host's local plugin cache. Activation then launches that already-cached executable. Activation is network-free: there is no repository clone, bootstrap script, GitHub API call, release download, `%LOCALAPPDATA%` installation, or first-use downloader.
 
 Plugin installation and plugin-server activation are separate settings. After installing and enabling the `excel-vba-mcp` plugin, enable its bundled MCP server in `~/.codex/config.toml` (on Windows, `%USERPROFILE%\.codex\config.toml`):
 
@@ -147,11 +149,23 @@ The **Connect to a custom MCP** screen is a useful diagnostic but is not the plu
 
 1. Update `VersionPrefix`, `AssemblyVersion`, and `FileVersion` in `Directory.Build.props`.
 2. Keep both root plugin manifests in sync with `Directory.Build.props`.
-3. Build, test, publish, and run the smoke test using the commands above.
-4. Complete the manual real-Excel verification on a Windows machine with Excel before declaring a Phase 2 release complete.
-5. Commit the source and bundled executable, create a matching annotated tag such as `v0.1.0`, then push.
+3. Build and test the solution, publish to `artifacts/publish`, and run the smoke test using the commands above.
+4. Assemble a plugin staging directory containing `.claude-plugin/`, `.codex-plugin/`, `.mcp.json`, and the published executable at `bin/win-x64/ExcelVbaMcp.exe`.
+5. Create the plugin ZIP, inspect and extract it, then smoke-test the executable from the extracted package.
+6. Complete the manual real-Excel verification on a Windows machine with Excel before declaring a Phase 2 release complete.
+7. Commit source, manifests, documentation, and workflow changes only. Never add the generated executable to Git. Create a matching annotated tag such as `v0.2.0`, then push.
 
-Every push and pull request restores, builds, publishes, and smoke-tests the server. CI produces one installable `excel-vba-mcp-plugin-win-x64.zip` containing the plugin manifest, MCP definition, and executable. A `v*` tag creates or updates the GitHub release and attaches that ZIP.
+Every push and pull request restores, builds, tests, publishes, assembles, and smoke-tests the server from source. CI produces one installable `excel-vba-mcp-plugin-win-x64.zip` with this required layout:
+
+```text
+excel-vba-mcp/
+|-- .claude-plugin/
+|-- .codex-plugin/
+|-- .mcp.json
+`-- bin/win-x64/ExcelVbaMcp.exe
+```
+
+CI smoke-tests the executable in the staging package and again after extracting the ZIP. The ZIP is uploaded as a workflow artifact. A `v*` tag creates or updates the matching GitHub Release and attaches that same ZIP.
 
 ## Scope and safety boundary
 

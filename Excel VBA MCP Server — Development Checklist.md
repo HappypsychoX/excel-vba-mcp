@@ -15,8 +15,9 @@ Completed foundation work:
 - Exactly two read-only tools: `ping` and `get_version`.
 - Self-contained, single-file `win-x64` publish and framework-free MCP smoke test.
 - Root-level Claude Code and Codex plugin manifests with host-specific bundled MCP configuration.
-- GitHub Actions restores, builds, publishes, smoke-tests, packages, and uploads the plugin ZIP.
+- GitHub Actions restores, builds, tests, publishes, assembles, smoke-tests, and uploads the plugin ZIP.
 - Tagged releases package the plugin ZIP only.
+- The generated `bin/win-x64/ExcelVbaMcp.exe` is ignored and is never committed to normal Git history.
 
 Phase 2 adds read-only workbook discovery for Excel instances that the user already opened. It is not an Excel-control feature: it never creates, opens, saves, closes, or quits Excel or a workbook. The implementation, 14 automated unit tests, Excel-absent protocol smoke test, and recorded real-Excel lifecycle harness have passed.
 
@@ -27,7 +28,7 @@ Phase 2 adds read-only workbook discovery for Excel instances that the user alre
 - [x] Have the server expose only the read-only `ping` and `get_version` tools.
 - [x] Create and push the GitHub repository for the project.
 - [x] Publish the Phase 1 server in the `v0.1.0` GitHub Release.
-- [x] Include `ExcelVbaMcp.exe` inside root `bin/win-x64/`.
+- [x] Include `ExcelVbaMcp.exe` at `bin/win-x64/` inside the completed plugin package.
 - [x] Add root `.mcp.json` for Codex and an inline MCP configuration for Claude Code.
 - [x] Package a plugin ZIP containing its manifest, MCP configuration, and server executable.
 - [x] Verify an MCP client can list exactly both tools and call `ping`/`get_version` against the bundled executable.
@@ -38,6 +39,18 @@ Phase 2 adds read-only workbook discovery for Excel instances that the user alre
 ### Superseded download bootstrap work
 
 The former first-use downloader that placed a release executable in `%LOCALAPPDATA%\ExcelVbaMcp\` is intentionally removed. Plugin installation already saves the server alongside its manifest and `.mcp.json`; adding a second distribution mechanism would duplicate the plugin model.
+
+### Development and release packaging
+
+- [x] Keep generated `bin/win-x64/ExcelVbaMcp.exe` out of Git; old commits may retain the historical binary.
+- [x] Restore, build, and test the solution from a clean source checkout before packaging.
+- [x] Publish a self-contained, single-file `win-x64` executable to generated output.
+- [x] Assemble `.claude-plugin/`, `.codex-plugin/`, `.mcp.json`, and `bin/win-x64/ExcelVbaMcp.exe` into the plugin package.
+- [x] Smoke-test the staged executable and the executable extracted from the completed ZIP.
+- [x] Upload the ZIP as a workflow artifact and attach the same ZIP to `v*` GitHub Releases.
+- [ ] Perform manual clean-install activation checks in Codex and Claude Code when release contents or manifests change.
+
+Never stage or commit the published executable. Installation obtains the complete plugin ZIP once; activation launches the executable already stored in the local plugin cache and performs no network download.
 
 ### Phase 1 Success Criteria
 
