@@ -2,11 +2,11 @@
 
 ## Current Status
 
-- **Updated:** August 15, 2026
+- **Updated:** August 16, 2026
 - **Branch:** `main`
-- **Phase 1 server version:** `0.1.3`; tagged plugin release pending
+- **Phase 1 server version:** `0.1.3`
 
-**Overall Phase 1:** in progress — the read-only server, CI packaging, first tagged release, and protocol smoke test are complete. Distribution now follows the bundled-plugin model: the plugin contains its `.mcp.json` and self-contained `ExcelVbaMcp.exe`; no first-use GitHub download is part of plugin activation.
+**Overall Phase 1:** complete — the read-only server, CI packaging, tagged plugin release, protocol smoke test, and Codex plugin-host acceptance test are complete. Distribution follows the bundled-plugin model: the plugin contains its `.mcp.json` and self-contained `ExcelVbaMcp.exe`; no first-use GitHub download is part of plugin activation.
 
 Completed foundation work:
 
@@ -15,7 +15,7 @@ Completed foundation work:
 - Self-contained, single-file `win-x64` publish and framework-free MCP smoke test.
 - Root-level Claude Code and Codex plugin manifests with host-specific bundled MCP configuration.
 - GitHub Actions restores, builds, publishes, smoke-tests, packages, and uploads the plugin ZIP.
-- The next tagged release packages the plugin ZIP only.
+- Tagged releases package the plugin ZIP only.
 
 No Excel, COM, VBIDE, workbook, or VBA automation has been implemented.
 
@@ -30,8 +30,9 @@ No Excel, COM, VBIDE, workbook, or VBA automation has been implemented.
 - [x] Add root `.mcp.json` for Codex and an inline MCP configuration for Claude Code.
 - [x] Package a plugin ZIP containing its manifest, MCP configuration, and server executable.
 - [x] Verify an MCP client can list exactly both tools and call `ping`/`get_version` against the bundled executable.
-- [ ] Install the root plugin in clean Claude Code and Codex profiles; verify host activation, tool listing, calls, and clean shutdown.
-- [ ] Confirm a second fresh session in each host reuses the installed plugin bundle without a network download.
+- [x] Install the root plugin in a clean Codex profile; verify host activation, tool listing, calls, and clean shutdown.
+- [x] Confirm a second fresh Codex session reuses the installed plugin bundle without a network download.
+- [ ] Validate the root plugin in Claude Code; this cross-host compatibility check is not a Phase 1 completion gate.
 
 ### Superseded download bootstrap work
 
@@ -41,7 +42,7 @@ The former first-use downloader that placed a release executable in `%LOCALAPPDA
 
 A clean Codex profile can install the plugin, start its bundled server, list exactly `ping` and `get_version`, call both tools, end the MCP session cleanly, and start a later session from the same installed bundle without downloading a release.
 
-**Status:** pending clean-profile Codex host validation. The server and bundle can be validated locally; host installation must still establish the runtime command-resolution behavior.
+**Status:** passed with plugin version `0.1.3`. After manual plugin installation and plugin-scoped MCP enablement in `config.toml`, two fresh Codex sessions started the bundled executable from the installed cache, listed exactly `ping` and `get_version`, returned `pong` and `0.1.3`, shut down cleanly, and left no `ExcelVbaMcp.exe` process. The second session reused the installed bundle without a release download.
 
 ---
 

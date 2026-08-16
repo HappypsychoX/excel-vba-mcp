@@ -79,7 +79,21 @@ Install the packaged plugin in Codex and enable it. The plugin brings the server
 
 `%LOCALAPPDATA%\ExcelVbaMcp\ExcelVbaMcp.exe` is not used by this distribution model. The plugin cache is the sole installation location; no standalone installer or direct-release download is planned.
 
-The precise host-side activation test is still an acceptance check: install the plugin into a clean Codex profile and confirm that the host resolves the root-relative command in `.mcp.json`, lists exactly `ping` and `get_version`, calls both, and shuts the server down when the MCP session ends.
+### Enable the bundled Codex MCP server
+
+Plugin installation and plugin-server activation are separate settings. After installing and enabling the `excel-vba-mcp` plugin, enable its bundled MCP server in `~/.codex/config.toml` (on Windows, `%USERPROFILE%\.codex\config.toml`):
+
+```toml
+[plugins."excel-vba-mcp".mcp_servers."excel-vba-mcp"]
+enabled = true
+default_tools_approval_mode = "prompt"
+```
+
+Fully restart the Codex desktop app, then start a new session. The session should list exactly `ping` and `get_version`; `ping` returns `pong`, and `get_version` returns the installed version.
+
+The **Connect to a custom MCP** screen is a useful diagnostic but is not the plugin activation path: configuring the cached executable there creates a separate, manually managed MCP server and bypasses the bundled-plugin setting.
+
+Codex host activation was validated with plugin version `0.1.3`: after installing the plugin and enabling its bundled server in `config.toml`, two fresh sessions each started the executable from the installed plugin cache, listed exactly `ping` and `get_version`, returned `pong` and `0.1.3`, and shut down without leaving an `ExcelVbaMcp.exe` process. The second session reused the installed bundle without downloading a release.
 
 ## Release process
 
@@ -102,7 +116,7 @@ Every push and pull request restores, builds, publishes, and smoke-tests the ser
 - [x] Publish and package a self-contained, single-file `win-x64` executable.
 - [x] Upload CI artifacts and attach ZIPs to `v*` GitHub releases.
 - [x] Provide a protocol-level smoke test for tool discovery and invocation.
-- [ ] Validate plugin installation and activation from a clean Codex profile.
+- [x] Validate plugin installation, activation, cache reuse, and clean shutdown from a clean Codex profile.
 
 The original, longer-term development checklist remains in [Excel VBA MCP Server — Development Checklist.md](./Excel%20VBA%20MCP%20Server%20%E2%80%94%20Development%20Checklist.md).
 
